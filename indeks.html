@@ -1,0 +1,215 @@
+
+<div id="idgame" class="w-full flex flex-col gap-3 text-base" style="color:var(--viz-text)">
+ <style>
+ #idgame{font-family:ui-sans-serif,system-ui,sans-serif}
+ #idgame .hero{background:linear-gradient(130deg,#102b4b,#176b82);color:white;border-radius:18px;padding:20px;position:relative;overflow:hidden}
+ #idgame .panel{background:var(--viz-card);border:1px solid var(--viz-border);border-radius:15px;padding:14px}
+ #idgame .muted{color:var(--viz-muted)}
+ #idgame button{cursor:pointer;transition:filter .15s,transform .15s}
+ #idgame button:active{transform:scale(.98)}
+ #idgame button:disabled{opacity:.45;cursor:not-allowed}
+ #idgame .primary{background:#167c91;color:white;border-radius:11px;padding:11px 16px;font-weight:750}
+ #idgame .secondary{border:1px solid var(--viz-border);border-radius:10px;padding:9px 12px;font-weight:650}
+ #idgame .choice{width:100%;text-align:left;border:1px solid var(--viz-border);border-radius:11px;padding:12px;display:flex;gap:10px;align-items:center;background:var(--viz-panel)}
+ #idgame .choice.selected{border:2px solid #16849b;background:rgba(22,132,155,.12)}
+ #idgame .choice.correct{border:2px solid #229b69;background:rgba(34,155,105,.13)}
+ #idgame .choice.wrong{border:2px solid #d65d58;background:rgba(214,93,88,.12)}
+ #idgame .teamdot{width:11px;height:11px;border-radius:50%;display:inline-block;flex-shrink:0}
+ #idgame .bar{height:8px;border-radius:10px;background:var(--viz-border);overflow:hidden}
+ #idgame .bar>div{height:100%;background:#23a5a0;transition:width .3s}
+ #idgame .scene{border-radius:12px;overflow:hidden;background:#183b39}
+ #idgame .scene svg{width:100%;display:block;max-height:230px}
+ #idgame .pill{border:1px solid var(--viz-border);border-radius:30px;padding:5px 10px;font-size:12px}
+ #idgame .teamrow{display:flex;align-items:center;gap:9px;padding:9px;border-radius:10px}
+ #idgame .teamrow.active{background:rgba(22,132,155,.12);outline:1px solid #16849b}
+ #idgame .bigtime{font-size:32px;font-weight:850;font-variant-numeric:tabular-nums}
+ #idgame .hidden{display:none!important}
+ #idgame .answerbox{border-radius:11px;padding:12px;background:var(--viz-panel);border:1px solid var(--viz-border)}
+ </style>
+ <div class="hero">
+  <div class="flex justify-between items-start gap-2">
+   <div><div class="text-xs tracking-widest font-bold" style="color:#a9e5e4">GEOGRAPHY CHALLENGE</div>
+    <div class="text-2xl sm:text-3xl font-black mt-1">🔎 THE IMAGE<br>DETECTIVES</div>
+    <div class="text-sm mt-2" style="color:#d8edf2">Misi rahasia mengungkap objek dari citra satelit</div>
+   </div>
+   <div class="text-4xl sm:text-5xl">🛰️</div>
+  </div>
+  <div class="flex flex-wrap gap-2 mt-4">
+   <span class="pill" style="color:white;border-color:#7cabbc">👥 6 Kelompok</span>
+   <span class="pill" style="color:white;border-color:#7cabbc">🎯 12 Tantangan</span>
+   <span class="pill" style="color:white;border-color:#7cabbc">⏱️ 45 detik/soal</span>
+  </div>
+ </div>
+ <div id="setup" class="panel flex flex-col gap-3">
+  <div><div class="font-bold text-lg">🧭 Persiapan misi</div><div class="muted text-sm">Guru dapat mengganti nama keenam kelompok sebelum permainan dimulai.</div></div>
+  <div id="teamSetup" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+  <div class="rounded-xl p-3 text-sm" style="background:var(--viz-panel)">
+   <b>Aturan permainan</b>
+   <ul class="list-disc pl-5 mt-1 space-y-1">
+    <li>Kelompok bermain bergiliran sesuai urutan.</li>
+    <li>Setiap kelompok mendapat dua pertanyaan.</li>
+    <li>Jawaban benar bernilai 100 poin ditambah bonus kecepatan maksimal 30 poin.</li>
+    <li>Jawaban salah atau waktu habis mendapat 0 poin.</li>
+    <li>Guru dapat menampilkan pembahasan setelah setiap jawaban.</li>
+   </ul>
+  </div>
+  <button id="start" class="primary w-full">🚀 MULAI PERMAINAN</button>
+ </div>
+ <div id="game" class="hidden flex flex-col gap-3">
+  <div class="panel flex flex-wrap justify-between items-center gap-2">
+   <div><div class="muted text-xs">BABAK BERJALAN</div><div id="progressLabel" class="font-bold">Misi 1 dari 12</div></div>
+   <div class="text-right"><div class="muted text-xs">KELOMPOK AKTIF</div><div id="activeTeam" class="font-bold">Kelompok 1</div></div>
+  </div>
+  <div class="bar"><div id="progressBar" style="width:0%"></div></div>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+   <div class="panel sm:col-span-2 flex flex-col gap-3">
+    <div class="flex flex-wrap justify-between items-center gap-2">
+     <span id="topic" class="pill">MISI CITRA</span>
+     <span id="questionNo" class="muted text-xs">PERTANYAAN 1/12</span>
+    </div>
+    <div id="scene" class="scene"></div>
+    <div><div class="muted text-xs font-bold">TANTANGAN DETEKTIF</div><div id="question" class="font-bold text-lg mt-1"></div></div>
+    <div id="options" class="flex flex-col gap-2"></div>
+    <div id="feedback" class="hidden answerbox text-sm"></div>
+    <div class="flex flex-wrap gap-2">
+     <button id="confirm" class="primary flex-1">Kunci Jawaban</button>
+     <button id="next" class="primary flex-1 hidden">Misi Berikutnya →</button>
+    </div>
+   </div>
+   <div class="flex flex-col gap-3">
+    <div class="panel text-center">
+     <div class="muted text-xs font-bold">⏱️ WAKTU TERSISA</div>
+     <div id="timer" class="bigtime">45</div>
+     <div class="bar mt-2"><div id="timerBar" style="width:100%"></div></div>
+     <button id="timerToggle" class="secondary w-full mt-3">▶ Mulai Timer</button>
+    </div>
+    <div class="panel">
+     <div class="font-bold mb-2">🏆 Papan peringkat</div>
+     <div id="leaderboard" class="flex flex-col gap-1"></div>
+    </div>
+   </div>
+  </div>
+ </div>
+ <div id="finish" class="hidden panel flex flex-col gap-3 text-center">
+  <div class="text-5xl">🏆</div>
+  <div class="text-2xl font-black">MISI SELESAI!</div>
+  <div class="muted text-sm">Seluruh detektif telah menyelesaikan tantangan interpretasi citra.</div>
+  <div id="winner"></div>
+  <div id="finalBoard" class="text-left"></div>
+  <button id="restart" class="primary w-full">↻ Main Lagi</button>
+ </div>
+ <div class="muted text-xs text-center">THE IMAGE DETECTIVES • Media permainan pembelajaran Geografi</div>
+</div>
+<script>
+(()=>{
+ const root=document.getElementById('idgame');if(root.dataset.ready)return;root.dataset.ready='1';
+ const $=id=>root.querySelector('#'+id);
+ const colors=['#e76b83','#e6a33e','#36a47b','#8878d5','#4199c5','#94a84b'];
+ let names=['Kelompok 1','Kelompok 2','Kelompok 3','Kelompok 4','Kelompok 5','Kelompok 6'];
+ let scores=[0,0,0,0,0,0],qIndex=0,selected=-1,locked=false,remaining=45,interval=null,running=false,results=[];
+ const questions=[
+ {team:0,topic:'PERMUKIMAN',scene:'settlement',q:'Perhatikan susunan bangunan pada citra. Unsur interpretasi apa yang paling kuat untuk mengenali permukiman yang tersusun teratur?',o:['Tekstur','Pola','Bayangan','Situs'],a:1,why:'Pola menunjukkan susunan objek. Bangunan yang berjajar atau membentuk blok teratur merupakan petunjuk pola permukiman.'},
+ {team:0,topic:'PERMUKIMAN',scene:'settlement',q:'Bangunan rumah tampak kecil dan berdekatan, dihubungkan oleh jalan lingkungan. Unsur asosiasi membantu mengenali permukiman karena rumah biasanya berdekatan dengan ...',o:['Jalan lingkungan','Kawah gunung','Terumbu karang','Gletser'],a:0,why:'Jalan lingkungan merupakan objek yang sering berasosiasi dengan kawasan permukiman.'},
+ {team:1,topic:'PERSAWAHAN',scene:'rice',q:'Petak-petak lahan berbentuk relatif teratur dengan rona hijau berbeda-beda. Unsur yang paling jelas terlihat dari susunan petak tersebut adalah ...',o:['Bayangan','Pola','Asosiasi','Ketinggian'],a:1,why:'Susunan petak yang berulang dan teratur menunjukkan unsur pola.'},
+ {team:1,topic:'PERSAWAHAN',scene:'rice',q:'Saluran air yang berkelok atau memanjang di antara petak sawah dapat menjadi petunjuk tambahan untuk mengenali ...',o:['Kawasan persawahan','Bandara','Permukiman padat','Kawasan tambang'],a:0,why:'Saluran irigasi merupakan objek yang sering berasosiasi dengan lahan persawahan.'},
+ {team:2,topic:'SUNGAI',scene:'river',q:'Kenampakan memanjang, berkelok, dan berona gelap di antara vegetasi paling mungkin merupakan ...',o:['Jalan tol','Sungai','Landasan pacu','Atap pabrik'],a:1,why:'Sungai dapat dikenali dari bentuk memanjang dan berkelok. Rona air dapat tampak gelap atau bervariasi.'},
+ {team:2,topic:'SUNGAI',scene:'river',q:'Untuk membedakan sungai dari jalan, kombinasi petunjuk yang paling masuk akal adalah ...',o:['Sungai selalu lurus dan berpola kotak','Sungai dapat berkelok dan berasosiasi dengan dataran aluvial','Jalan selalu berwarna biru','Sungai selalu memiliki bayangan gedung'],a:1,why:'Bentuk alur berkelok serta asosiasi dengan dataran aluvial atau vegetasi riparian membantu mengenali sungai.'},
+ {team:3,topic:'TRANSPORTASI',scene:'road',q:'Jaringan jalan pada citra tampak memanjang, relatif seragam lebarnya, dan saling terhubung. Unsur yang dapat membantu mengenalinya adalah ...',o:['Bentuk dan pola','Rasa dan aroma','Suhu tubuh','Kedalaman tanah saja'],a:0,why:'Jalan memiliki bentuk memanjang dan pola jaringan yang saling terhubung.'},
+ {team:3,topic:'TRANSPORTASI',scene:'road',q:'Persimpangan jalan yang bercabang dan bertemu pada satu titik merupakan petunjuk utama berupa ...',o:['Tekstur','Pola jaringan','Rona air','Bayangan pohon'],a:1,why:'Pola jaringan jalan terlihat dari keteraturan dan hubungan antarjalur.'},
+ {team:4,topic:'KAWASAN INDUSTRI',scene:'industry',q:'Kawasan dengan bangunan beratap besar, bentuk geometris, dan halaman luas kemungkinan merupakan ...',o:['Kawasan industri','Hutan alami','Danau','Sawah tadah hujan'],a:0,why:'Bangunan pabrik dan gudang biasanya berukuran besar, berbentuk geometris, dan berasosiasi dengan halaman serta jalan akses.'},
+ {team:4,topic:'KAWASAN INDUSTRI',scene:'industry',q:'Bangunan pabrik yang tampak memiliki bentuk persegi panjang dan ukuran jauh lebih besar daripada rumah menunjukkan unsur ...',o:['Ukuran dan bentuk','Situs saja','Bayangan saja','Warna langit'],a:0,why:'Ukuran dan bentuk merupakan unsur penting untuk membedakan gudang atau pabrik dari rumah.'},
+ {team:5,topic:'HUTAN',scene:'forest',q:'Area vegetasi tampak rapat, bertekstur relatif kasar, dan bentuk kawasannya tidak beraturan. Objek yang paling mungkin adalah ...',o:['Hutan','Bandara','Pelabuhan','Jalan raya'],a:0,why:'Kombinasi vegetasi rapat, tekstur relatif kasar, dan bentuk kawasan tidak beraturan dapat mengindikasikan hutan.'},
+ {team:5,topic:'HUTAN',scene:'forest',q:'Apa salah satu petunjuk yang dapat membantu membedakan perkebunan teratur dari hutan alami?',o:['Hutan selalu berwarna biru','Perkebunan sering memiliki pola tanam lebih teratur','Hutan selalu berbentuk persegi','Perkebunan tidak memiliki vegetasi'],a:1,why:'Perkebunan sering menunjukkan pola barisan atau jarak tanam yang teratur, sedangkan hutan alami cenderung lebih tidak beraturan.'}
+ ];
+ function scene(type){
+ let common='<rect width="600" height="260" fill="#557c4d"/>';
+ let svg='';
+ if(type==='settlement'){
+ svg=common+'<path d="M0 205 L600 55 M0 55 L600 220 M140 0 L380 260" stroke="#b9b4a1" stroke-width="17"/><path d="M0 205 L600 55 M0 55 L600 220 M140 0 L380 260" stroke="#e6dfc8" stroke-width="2"/>';
+ for(let y=20;y<245;y+=48)for(let x=15;x<590;x+=55){let dx=(x+y)%17;svg+=`<rect x="${x+dx}" y="${y}" width="28" height="22" rx="2" fill="${['#c7b9a0','#a75f4d','#d6d0bd','#8b9b9a'][(x+y)%4]}"/><rect x="${x+dx+3}" y="${y+3}" width="22" height="16" fill="#b9b3a5"/>`;}
+ }else if(type==='rice'){
+ svg='<rect width="600" height="260" fill="#67904a"/>';
+ for(let y=0;y<260;y+=52)for(let x=0;x<600;x+=100){svg+=`<path d="M${x} ${y} h100 v52 h-100z" fill="${['#7fae52','#9bbd61','#537d3e','#b0bd65'][(x/100+y/52)%4]} " stroke="#d5c99a" stroke-width="3"/>`;}
+ svg+='<path d="M0 220 Q130 190 220 210 T420 200 T600 210" stroke="#80b5b0" stroke-width="8" fill="none"/>';
+ }else if(type==='river'){
+ svg='<rect width="600" height="260" fill="#497c45"/>';
+ for(let i=0;i<30;i++){let x=(i*79)%600,y=(i*43)%260;svg+=`<circle cx="${x}" cy="${y}" r="${12+(i%5)*3}" fill="#386d3c" opacity=".8"/>`;}
+ svg+='<path d="M-20 65 C130 5 140 180 280 120 S430 30 630 175" stroke="#d3c38d" stroke-width="52" fill="none"/><path d="M-20 65 C130 5 140 180 280 120 S430 30 630 175" stroke="#387f9b" stroke-width="39" fill="none"/>';
+ }else if(type==='road'){
+ svg='<rect width="600" height="260" fill="#557c4c"/>';
+ for(let i=0;i<22;i++){let x=(i*83)%600,y=(i*57)%260;svg+=`<rect x="${x}" y="${y}" width="35" height="23" fill="#7d9a5b"/>`;}
+ svg+='<path d="M-30 210 L630 40 M80 -20 L490 290 M-30 85 L620 245" stroke="#c7c4b7" stroke-width="32" fill="none"/><path d="M-30 210 L630 40 M80 -20 L490 290 M-30 85 L620 245" stroke="#f0e6c5" stroke-width="2" stroke-dasharray="15 12" fill="none"/>';
+ }else if(type==='industry'){
+ svg='<rect width="600" height="260" fill="#728b62"/>';
+ for(let y=25;y<235;y+=90)for(let x=25;x<570;x+=135){svg+=`<rect x="${x}" y="${y}" width="105" height="60" fill="#c3c5b9" stroke="#737e79" stroke-width="4"/><path d="M${x+5} ${y+12} h95" stroke="#929d9b" stroke-width="5"/>`;}
+ svg+='<path d="M0 130 H600 M300 0 V260" stroke="#bbb9a9" stroke-width="20"/><path d="M0 130 H600 M300 0 V260" stroke="#e6dec5" stroke-width="2" stroke-dasharray="12 10"/>';
+ }else{
+ svg='<rect width="600" height="260" fill="#315f3d"/>';
+ for(let i=0;i<100;i++){let x=(i*71)%600,y=(i*113)%260,r=9+(i%7)*2;svg+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${['#397b42','#245d39','#55864a','#47723d'] [i%4]}" opacity=".95"/>`;}
+ }
+ return `<svg viewBox="0 0 600 260" role="img" aria-label="Ilustrasi citra udara">${svg}<rect x="5" y="5" width="590" height="250" rx="5" fill="none" stroke="#ffffff" stroke-opacity=".3" stroke-width="2"/><text x="18" y="241" font-size="12" fill="white" opacity=".8">SIMULASI CITRA UDARA • ILUSTRASI PEMBELAJARAN</text></svg>`;
+ }
+ function stopTimer(){if(interval)clearInterval(interval);interval=null;running=false;$('timerToggle').textContent='▶ Lanjutkan Timer';}
+ function updateTimer(){
+ $('timer').textContent=remaining;
+ $('timerBar').style.width=(remaining/45*100)+'%';
+ $('timer').style.color=remaining<=10?'#df625b':'var(--viz-text)';
+ }
+ function startTimer(){
+ if(locked||running)return;running=true;$('timerToggle').textContent='Ⅱ Jeda Timer';
+ interval=setInterval(()=>{remaining--;updateTimer();if(remaining<=0){stopTimer();lockAnswer(true);}},1000);
+ }
+ function renderBoard(){
+ const sorted=scores.map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v);
+ $('leaderboard').innerHTML=sorted.map((t,pos)=>`<div class="teamrow ${questions[qIndex]&&questions[qIndex].team===t.i?'active':''}"><span class="font-bold text-xs muted">${pos+1}.</span><span class="teamdot" style="background:${colors[t.i]}"></span><span class="text-sm flex-1 truncate">${escapeHtml(names[t.i])}</span><b class="text-sm">${t.v}</b></div>`).join('');
+ }
+ function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+ function loadQuestion(){
+ selected=-1;locked=false;remaining=45;updateTimer();
+ const q=questions[qIndex];
+ $('progressLabel').textContent=`Misi ${qIndex+1} dari ${questions.length}`;
+ $('questionNo').textContent=`PERTANYAAN ${qIndex+1}/${questions.length}`;
+ $('progressBar').style.width=(qIndex/questions.length*100)+'%';
+ $('activeTeam').textContent=names[q.team];
+ $('activeTeam').style.color=colors[q.team];
+ $('topic').textContent='🔍 '+q.topic;
+ $('scene').innerHTML=scene(q.scene);
+ $('question').textContent=q.q;
+ $('options').innerHTML=q.o.map((o,i)=>`<button class="choice" data-option="${i}"><b style="color:var(--viz-muted)">${String.fromCharCode(65+i)}.</b><span>${o}</span></button>`).join('');
+ $('options').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{if(locked)return;selected=Number(b.dataset.option);$('options').querySelectorAll('button').forEach(x=>x.classList.toggle('selected',x===b));}));
+ $('feedback').classList.add('hidden');$('confirm').classList.remove('hidden');$('confirm').disabled=false;$('next').classList.add('hidden');$('timerToggle').textContent='▶ Mulai Timer';
+ stopTimer();renderBoard();
+ }
+ function lockAnswer(timeout=false){
+ if(locked)return;
+ if(!timeout&&selected<0){$('feedback').textContent='Pilih salah satu jawaban terlebih dahulu.';$('feedback').classList.remove('hidden');return;}
+ locked=true;stopTimer();
+ const q=questions[qIndex],team=q.team,correct=selected===q.a;
+ const bonus=correct?Math.round(remaining/45*30):0,points=correct?100+bonus:0;
+ scores[team]+=points;results.push({team,correct,points});
+ $('options').querySelectorAll('button').forEach((b,i)=>{b.disabled=true;if(i===q.a)b.classList.add('correct');else if(i===selected&&!correct)b.classList.add('wrong');});
+ $('feedback').classList.remove('hidden');
+ $('feedback').innerHTML=`<div class="font-bold ${correct?'':'text-red-500'}">${timeout?'⏰ Waktu habis!':correct?'🎉 Jawaban benar!':'❌ Jawaban belum tepat.'} ${correct?'+'+points+' poin':''}</div><div class="mt-2"><b>Jawaban:</b> ${q.o[q.a]}</div><div class="mt-1"><b>Penjelasan:</b> ${q.why}</div>${correct?`<div class="mt-1 muted">Bonus kecepatan: ${bonus} poin</div>`:''}`;
+ $('confirm').classList.add('hidden');$('next').classList.remove('hidden');$('next').textContent=qIndex===questions.length-1?'Lihat Hasil Akhir 🏆':'Misi Berikutnya →';
+ renderBoard();
+ }
+ function finish(){
+ $('game').classList.add('hidden');$('finish').classList.remove('hidden');
+ $('progressBar').style.width='100%';
+ const sorted=scores.map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v);
+ $('winner').innerHTML=`<div class="rounded-xl p-4 my-2" style="background:rgba(22,132,155,.12)"><div class="text-sm muted">JUARA PERTAMA</div><div class="text-2xl font-black mt-1">${escapeHtml(names[sorted[0].i])}</div><div class="font-bold text-lg">${sorted[0].v} poin</div></div>`;
+ $('finalBoard').innerHTML=sorted.map((t,i)=>`<div class="teamrow"><b class="w-7">${['🥇','🥈','🥉'][i]||`${i+1}.`}</b><span class="teamdot" style="background:${colors[t.i]}"></span><span class="flex-1">${escapeHtml(names[t.i])}</span><b>${t.v} poin</b></div>`).join('');
+ }
+ function begin(){
+ names=Array.from(root.querySelectorAll('.team-name')).map((e,i)=>e.value.trim()||`Kelompok ${i+1}`);
+ scores=[0,0,0,0,0,0];results=[];qIndex=0;
+ $('setup').classList.add('hidden');$('finish').classList.add('hidden');$('game').classList.remove('hidden');loadQuestion();
+ }
+ $('teamSetup').innerHTML=names.map((n,i)=>`<label class="flex items-center gap-2 text-sm"><span class="teamdot" style="background:${colors[i]}"></span><span class="font-semibold w-20">Tim ${i+1}</span><input class="team-name min-w-0 flex-1 rounded-lg border px-3 py-2" style="background:var(--viz-panel);border-color:var(--viz-border);color:var(--viz-text)" maxlength="24" value="${n}"></label>`).join('');
+ $('start').addEventListener('click',begin);
+ $('confirm').addEventListener('click',()=>lockAnswer(false));
+ $('timerToggle').addEventListener('click',()=>running?stopTimer():startTimer());
+ $('next').addEventListener('click',()=>{if(qIndex<questions.length-1){qIndex++;loadQuestion();}else finish();});
+ $('restart').addEventListener('click',()=>{stopTimer();$('finish').classList.add('hidden');$('setup').classList.remove('hidden');});
+})();
+</script>
